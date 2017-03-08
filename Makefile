@@ -12,17 +12,18 @@ LFUSE = 0x62
 HFUSE = 0xdf
 EFUSE = 0x00
 
+SOURCEDIR=src/avr
+BUILDDIR=target/avr
 
-TARGET=hello
+TARGET=$(BUILDDIR)/hello
 #TARGET = $(lastword $(subst /, ,$(CURDIR)))
 
-SOURCES=$(wildcard src/avr/*.cpp)
-OBJECTS=$(SOURCES:.cpp=.o)
-HEADERS=$(SOURCES:.cpp=.h)
+SOURCES=$(wildcard $(SOURCEDIR)/*.cpp)
+OBJECTS=$(patsubst $(SOURCEDIR)/%.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 
 ## Compilation options, type man avr-gcc if you're curious.
 CPPFLAGS = -DF_CPU=$(F_CPU)
-CFLAGS = -Os -g -std=gnu99 -Wall
+CFLAGS = -Os -g -Wall
 ## Use short (8-bit) data types 
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums 
 ## Splits up object files per function
@@ -37,9 +38,11 @@ LDFLAGS += -Wl,--gc-sections
 ## LDFLAGS += -Wl,-u,vfprintf -lprintf_min      ## for smaller printf
 TARGET_ARCH = -mmcu=$(MCU)
 
+all: directories $(TARGET).hex
+
 ##  To make .o files from .cpp files 
-%.o: %.cpp $(HEADERS) Makefile
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -o -c $@ $<;
+$(OBJECTS): $(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp Makefile
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c $< -o $@
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ $(LDLIBS) -o $@
@@ -54,27 +57,30 @@ $(TARGET).elf: $(OBJECTS)
 	$(OBJDUMP) -S $< > $@
 
 ## These targets don't have files named after them
-.PHONY: all disassemble disasm eeprom size flash fuses
+.PHONY: all directories disassemble disasm eeprom size flash fuses
 
-all: $(TARGET).hex
+directories: $(BUILDDIR)
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
 disassemble: $(TARGET).lst
 disasm: disassemble
 
 size:  $(TARGET).elf
-    $(AVRSIZE) -C --mcu=$(MCU) $(TARGET).elf
+	$(AVRSIZE) -C --mcu=$(MCU) $(TARGET).elf
 
 flash: $(TARGET).hex 
-    $(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U flash:w:$<
+	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U flash:w:$<
 
 flash_eeprom: $(TARGET).eeprom
-    $(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U eeprom:w:$<
+	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U eeprom:w:$<
 
 fuses: 
-    $(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) \
-               $(PROGRAMMER_ARGS) $(FUSE_STRING)
+	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) $(FUSE_STRING)
+
 show_fuses:
-    $(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -nv	
+	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -nv	
 
 ## Set the EESAVE fuse byte to preserve EEPROM across flashes
 set_eeprom_save_fuse: HFUSE = 0xD7
