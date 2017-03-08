@@ -1,0 +1,20 @@
+#!/bin/bash
+cd /tmp/build
+svn checkout --depth=empty svn://svn.archlinux.org/community
+cd community
+
+# TODO maybe also need to downgrade gcc-libs?
+svn update -r215243 avr-binutils # 2.28-1
+pushd avr-binutils/repos/community-x86_64
+sudo -u build-user makepkg -is --noconfirm --noprogressbar --skippgpcheck
+popd
+
+svn update -r163647 avr-gcc      # 5.3.0-2
+pushd avr-gcc/repos/community-x86_64
+sudo -u build-user makepkg -is --noconfirm --noprogressbar --skippgpcheck
+popd
+
+svn update -r215243 avr-libc     # 2.0.0-1
+pushd avr-libc/repos/community-any
+sudo -u build-user makepkg -is --noconfirm --noprogressbar --skippgpcheck
+popd

@@ -1,0 +1,8 @@
+
+version: '2'
+services:
+  avr-gcc:
+    build:
+      context: ./avr-gcc
+      dockerfile: Dockerfile
+    image: jypma/avr-gcc:5.3
