@@ -5,4 +5,4 @@ services:
     build:
       context: ./avr-gcc
       dockerfile: Dockerfile
-    image: jypma/avr-gcc:5.3
+    image: jypma/avr-gcc:5.4.0

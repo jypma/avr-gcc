@@ -13,7 +13,7 @@ HFUSE = 0xdf
 EFUSE = 0x00
 
 SOURCEDIR=src/avr
-BUILDDIR=target/avr
+BUILDDIR=target/$(MCU)
 
 TARGET=$(BUILDDIR)/hello
 #TARGET = $(lastword $(subst /, ,$(CURDIR)))

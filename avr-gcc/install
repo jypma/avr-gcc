@@ -11,6 +11,7 @@ popd
 
 svn update -r163647 avr-gcc      # 5.3.0-2
 pushd avr-gcc/repos/community-x86_64
+patch -u PKGBUILD /PKGBUILD.5.4.0.diff # build released 5.4.0 instead of a snapshot
 sudo -u build-user makepkg -is --noconfirm --noprogressbar --skippgpcheck
 popd
 
